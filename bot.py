@@ -39,9 +39,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+# Support both TELEGRAM_BOT_TOKEN and TELEGRAM_TOKEN
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("TELEGRAM_TOKEN")
 if not TOKEN or TOKEN == "your_telegram_bot_token_here":
-    logger.error("❌ No valid Telegram token found. Please set TELEGRAM_BOT_TOKEN in .env file")
+    logger.error("❌ No valid Telegram token found. Please set TELEGRAM_TOKEN or TELEGRAM_BOT_TOKEN in environment")
     exit(1)
 
 WAITING_FOR_PARTNER = 1

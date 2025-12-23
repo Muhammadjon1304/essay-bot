@@ -10,7 +10,7 @@ load_dotenv(override=True)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Database configuration - Railway uses DATABASE_URL
+# Database configuration - Support Railway and local development
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
@@ -24,27 +24,51 @@ if DATABASE_URL:
             logger.error(f"Database connection error: {e}")
             raise
 else:
-    # Local development - use individual environment variables
-    DB_HOST = os.getenv("DB_HOST", "localhost")
-    DB_PORT = os.getenv("DB_PORT", "5432")
-    DB_NAME = os.getenv("DB_NAME", "essay_bot")
-    DB_USER = os.getenv("DB_USER", "postgres")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+    # Try Railway individual variables (PGHOST, PGUSER, etc.)
+    PGHOST = os.getenv("PGHOST")
+    PGPORT = os.getenv("PGPORT", "5432")
+    PGDATABASE = os.getenv("PGDATABASE")
+    PGUSER = os.getenv("PGUSER")
+    PGPASSWORD = os.getenv("PGPASSWORD")
+    
+    if PGHOST:
+        # Railway individual variables
+        def get_connection():
+            """Get database connection from Railway PG variables"""
+            try:
+                conn = psycopg2.connect(
+                    host=PGHOST,
+                    port=PGPORT,
+                    database=PGDATABASE,
+                    user=PGUSER,
+                    password=PGPASSWORD
+                )
+                return conn
+            except psycopg2.Error as e:
+                logger.error(f"Database connection error: {e}")
+                raise
+    else:
+        # Local development - use individual environment variables
+        DB_HOST = os.getenv("DB_HOST", "localhost")
+        DB_PORT = os.getenv("DB_PORT", "5432")
+        DB_NAME = os.getenv("DB_NAME", "essay_bot")
+        DB_USER = os.getenv("DB_USER", "postgres")
+        DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
-    def get_connection():
-        """Get database connection from local .env"""
-        try:
-            conn = psycopg2.connect(
-                host=DB_HOST,
-                port=DB_PORT,
-                database=DB_NAME,
-                user=DB_USER,
-                password=DB_PASSWORD
-            )
-            return conn
-        except psycopg2.Error as e:
-            logger.error(f"Database connection error: {e}")
-            raise
+        def get_connection():
+            """Get database connection from local .env"""
+            try:
+                conn = psycopg2.connect(
+                    host=DB_HOST,
+                    port=DB_PORT,
+                    database=DB_NAME,
+                    user=DB_USER,
+                    password=DB_PASSWORD
+                )
+                return conn
+            except psycopg2.Error as e:
+                logger.error(f"Database connection error: {e}")
+                raise
 
 def init_db():
     """Initialize database schema"""
