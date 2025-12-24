@@ -769,7 +769,19 @@ async def finish_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Send PDF to archive chat
         ARCHIVE_CHAT_ID = 2145998565
-        await send_pdf_file(context.bot, ARCHIVE_CHAT_ID, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf")
+        # Create caption with all original names
+        creator_name = essay.get('creator_name', 'Unknown')
+        partners_names = []
+        if essay.get('partners'):
+            for partner in essay['partners']:
+                partners_names.append(partner.get('name', 'Unknown'))
+        
+        archive_caption = f"📄 {essay['topic']}\n\n#others\n\n"
+        archive_caption += f"By: {creator_name}"
+        if partners_names:
+            archive_caption += f" & {', '.join(partners_names)}"
+        
+        await send_pdf_file(context.bot, ARCHIVE_CHAT_ID, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf", archive_caption)
         
         # Send PDF to current user
         await send_pdf_file(context.bot, user_id, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf", "📄 Your essay PDF")
@@ -864,7 +876,19 @@ async def accept_finish(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Send PDF to archive chat
         ARCHIVE_CHAT_ID = 2145998565
-        await send_pdf_file(context.bot, ARCHIVE_CHAT_ID, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf")
+        # Create caption with all original names
+        creator_name = essay.get('creator_name', 'Unknown')
+        partners_names = []
+        if essay.get('partners'):
+            for partner in essay['partners']:
+                partners_names.append(partner.get('name', 'Unknown'))
+        
+        archive_caption = f"📄 {essay['topic']}\n\n#others\n\n"
+        archive_caption += f"By: {creator_name}"
+        if partners_names:
+            archive_caption += f" & {', '.join(partners_names)}"
+        
+        await send_pdf_file(context.bot, ARCHIVE_CHAT_ID, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf", archive_caption)
         
         # Send PDF to current user (who accepted)
         await send_pdf_file(context.bot, user_id, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf", "📄 Your essay PDF")
