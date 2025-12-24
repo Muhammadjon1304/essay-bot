@@ -1003,6 +1003,9 @@ def main():
     # External handlers for notification flow - these work outside conversation state
     # These are added AFTER the ConversationHandler, so they only fire if ConversationHandler doesn't handle the update
     app.add_handler(CallbackQueryHandler(back_to_main, pattern="^back_to_main$"))
+    app.add_handler(CallbackQueryHandler(create_essay, pattern="^create_essay$"))
+    app.add_handler(CallbackQueryHandler(my_essays, pattern="^my_essays$"))
+    app.add_handler(CallbackQueryHandler(my_joined_essays, pattern="^my_joined_essays$"))
     app.add_handler(CallbackQueryHandler(browse_essays, pattern="^browse_essays$"))
     app.add_handler(CallbackQueryHandler(join_essay_callback, pattern="^join_essay_"))
     app.add_handler(CallbackQueryHandler(choose_join_anonymity, pattern="^join_anon_"))
