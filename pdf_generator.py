@@ -72,8 +72,16 @@ def generate_essay_pdf(essay):
     
     first_content = essay.get('first_content', '')
     second_content = essay.get('second_content', '')
-    full_content = f"{first_content}\n\n{second_content}"
-    story.append(Paragraph(full_content, content_style))
+    
+    # Add first content (opening) on its own line
+    if first_content:
+        story.append(Paragraph(first_content, content_style))
+        story.append(Spacer(1, 0.2*inch))
+    
+    # Add second content (continuation) on its own line
+    if second_content:
+        story.append(Paragraph(second_content, content_style))
+        story.append(Spacer(1, 0.2*inch))
     
     story.append(Spacer(1, 0.3*inch))
     
