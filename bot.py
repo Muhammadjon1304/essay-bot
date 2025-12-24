@@ -473,7 +473,6 @@ async def continue_writing(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"✍️ Showing essay for writing: {word_count} words")
     
     keyboard = [
-        [InlineKeyboardButton("✍️ Write Contribution", callback_data="write_contribution")],
         [InlineKeyboardButton("⬅️ Back to Main", callback_data="back_to_main")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
