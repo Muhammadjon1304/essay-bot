@@ -57,6 +57,7 @@ async def send_pdf_file(bot, chat_id, pdf_path, filename, caption=None):
     """Helper function to send PDF file properly using BytesIO"""
     try:
         if pdf_path and os.path.exists(pdf_path):
+            logger.info(f"📤 Attempting to send PDF to chat {chat_id}: {filename}")
             with open(pdf_path, 'rb') as f:
                 pdf_bytes = BytesIO(f.read())
             await bot.send_document(
@@ -65,7 +66,10 @@ async def send_pdf_file(bot, chat_id, pdf_path, filename, caption=None):
                 filename=filename,
                 caption=caption
             )
+            logger.info(f"✅ PDF successfully sent to chat {chat_id}")
             return True
+        else:
+            logger.warning(f"⚠️ PDF file not found: {pdf_path}")
     except Exception as e:
         logger.error(f"❌ Error sending PDF to {chat_id}: {e}")
     return False
