@@ -160,9 +160,9 @@ def get_essay(essay_id):
         essay = cur.fetchone()
         
         if essay:
-            # Get partners
+            # Get partners with anonymity info
             cur.execute("""
-                SELECT partner_id as id, partner_name as name FROM partners 
+                SELECT partner_id as id, partner_name as name, is_anonymous FROM partners 
                 WHERE essay_id = %s
             """, (essay_id,))
             partners = cur.fetchall()
@@ -243,9 +243,9 @@ def get_user_essays(creator_id):
         result = []
         for essay in essays:
             essay_dict = dict(essay)
-            # Get partners
+            # Get partners with anonymity info
             cur.execute("""
-                SELECT partner_id as id, partner_name as name FROM partners 
+                SELECT partner_id as id, partner_name as name, is_anonymous FROM partners 
                 WHERE essay_id = %s
             """, (essay_dict['id'],))
             partners = cur.fetchall()
@@ -277,9 +277,9 @@ def get_user_joined_essays(partner_id):
         result = []
         for essay in essays:
             essay_dict = dict(essay)
-            # Get all partners
+            # Get all partners with anonymity info
             cur.execute("""
-                SELECT partner_id as id, partner_name as name FROM partners 
+                SELECT partner_id as id, partner_name as name, is_anonymous FROM partners 
                 WHERE essay_id = %s
             """, (essay_dict['id'],))
             partners = cur.fetchall()
@@ -325,9 +325,9 @@ def get_all_essays():
         result = []
         for essay in essays:
             essay_dict = dict(essay)
-            # Get partners
+            # Get partners with anonymity info
             cur.execute("""
-                SELECT partner_id as id, partner_name as name FROM partners 
+                SELECT partner_id as id, partner_name as name, is_anonymous FROM partners 
                 WHERE essay_id = %s
             """, (essay_dict['id'],))
             partners = cur.fetchall()
@@ -413,9 +413,9 @@ def get_available_essays():
         result = []
         for essay in essays:
             essay_dict = dict(essay)
-            # Get partners
+            # Get partners with anonymity info
             cur.execute("""
-                SELECT partner_id as id, partner_name as name FROM partners 
+                SELECT partner_id as id, partner_name as name, is_anonymous FROM partners 
                 WHERE essay_id = %s
             """, (essay_dict['id'],))
             partners = cur.fetchall()
