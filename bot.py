@@ -912,8 +912,10 @@ async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await query.edit_message_text(
-        "🎯 Main Menu\n\n"
+    # Send new message instead of editing
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="🎯 Main Menu\n\n"
         "What would you like to do?",
         reply_markup=reply_markup
     )
