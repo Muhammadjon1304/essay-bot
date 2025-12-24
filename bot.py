@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from io import BytesIO
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -51,6 +52,23 @@ WAITING_FOR_PARTNER_TURN = 3
 WRITING_DEVELOPMENT = 4
 CHOOSE_ANONYMITY = 5
 CHOOSE_JOIN_ANONYMITY = 6
+
+async def send_pdf_file(bot, chat_id, pdf_path, filename, caption=None):
+    """Helper function to send PDF file properly using BytesIO"""
+    try:
+        if pdf_path and os.path.exists(pdf_path):
+            with open(pdf_path, 'rb') as f:
+                pdf_bytes = BytesIO(f.read())
+            await bot.send_document(
+                chat_id=chat_id,
+                document=pdf_bytes,
+                filename=filename,
+                caption=caption
+            )
+            return True
+    except Exception as e:
+        logger.error(f"❌ Error sending PDF to {chat_id}: {e}")
+    return False
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start command - shows main menu"""
@@ -747,31 +765,10 @@ async def finish_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Send PDF to archive chat
         ARCHIVE_CHAT_ID = 2362694708
-        if pdf_file and os.path.exists(pdf_file):
-            try:
-                with open(pdf_file, 'rb') as f:
-                    await context.bot.send_document(
-                        chat_id=ARCHIVE_CHAT_ID,
-                        document=f,
-                        filename=f"{essay['topic'].replace(' ', '_')}.pdf"
-                    )
-                    logger.info(f"✅ PDF sent to archive chat {ARCHIVE_CHAT_ID}")
-            except Exception as e:
-                logger.error(f"❌ Error sending PDF to archive chat: {e}")
+        await send_pdf_file(context.bot, ARCHIVE_CHAT_ID, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf")
         
         # Send PDF to current user
-        if pdf_file and os.path.exists(pdf_file):
-            try:
-                with open(pdf_file, 'rb') as f:
-                    await context.bot.send_document(
-                        chat_id=user_id,
-                        document=f,
-                        filename=f"{essay['topic'].replace(' ', '_')}.pdf",
-                        caption="📄 Your essay PDF"
-                    )
-                    logger.info(f"✅ PDF sent to user {user_id}")
-            except Exception as e:
-                logger.error(f"❌ Error sending PDF to {user_id}: {e}")
+        await send_pdf_file(context.bot, user_id, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf", "📄 Your essay PDF")
         
         # Send to other partner
         other_user_id = essay['creator_id'] if user_id != essay['creator_id'] else essay['partners'][0]['id']
@@ -783,18 +780,7 @@ async def finish_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Send PDF to other partner
-        if pdf_file and os.path.exists(pdf_file):
-            try:
-                with open(pdf_file, 'rb') as f:
-                    await context.bot.send_document(
-                        chat_id=other_user_id,
-                        document=f,
-                        filename=f"{essay['topic'].replace(' ', '_')}.pdf",
-                        caption="📄 Your essay PDF"
-                    )
-                    logger.info(f"✅ PDF sent to user {other_user_id}")
-            except Exception as e:
-                logger.error(f"❌ Error sending PDF to {other_user_id}: {e}")
+        await send_pdf_file(context.bot, other_user_id, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf", "📄 Your essay PDF")
     else:
         # Get other partner
         if user_id == essay['creator_id']:
@@ -874,31 +860,10 @@ async def accept_finish(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Send PDF to archive chat
         ARCHIVE_CHAT_ID = 2362694708
-        if pdf_file and os.path.exists(pdf_file):
-            try:
-                with open(pdf_file, 'rb') as f:
-                    await context.bot.send_document(
-                        chat_id=ARCHIVE_CHAT_ID,
-                        document=f,
-                        filename=f"{essay['topic'].replace(' ', '_')}.pdf"
-                    )
-                    logger.info(f"✅ PDF sent to archive chat {ARCHIVE_CHAT_ID}")
-            except Exception as e:
-                logger.error(f"❌ Error sending PDF to archive chat: {e}")
+        await send_pdf_file(context.bot, ARCHIVE_CHAT_ID, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf")
         
         # Send PDF to current user (who accepted)
-        if pdf_file and os.path.exists(pdf_file):
-            try:
-                with open(pdf_file, 'rb') as f:
-                    await context.bot.send_document(
-                        chat_id=user_id,
-                        document=f,
-                        filename=f"{essay['topic'].replace(' ', '_')}.pdf",
-                        caption="📄 Your essay PDF"
-                    )
-                    logger.info(f"✅ PDF sent to user {user_id}")
-            except Exception as e:
-                logger.error(f"❌ Error sending PDF to {user_id}: {e}")
+        await send_pdf_file(context.bot, user_id, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf", "📄 Your essay PDF")
         
         # Send to other partner (who requested finish)
         other_user_id = essay['creator_id'] if user_id != essay['creator_id'] else essay['partners'][0]['id']
@@ -910,18 +875,7 @@ async def accept_finish(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Send PDF to other partner
-        if pdf_file and os.path.exists(pdf_file):
-            try:
-                with open(pdf_file, 'rb') as f:
-                    await context.bot.send_document(
-                        chat_id=other_user_id,
-                        document=f,
-                        filename=f"{essay['topic'].replace(' ', '_')}.pdf",
-                        caption="📄 Your essay PDF"
-                    )
-                    logger.info(f"✅ PDF sent to user {other_user_id}")
-            except Exception as e:
-                logger.error(f"❌ Error sending PDF to {other_user_id}: {e}")
+        await send_pdf_file(context.bot, other_user_id, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf", "📄 Your essay PDF")
     else:
         await query.edit_message_text(
             "✅ You accepted the finish request!",
