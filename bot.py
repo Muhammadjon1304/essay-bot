@@ -1007,6 +1007,7 @@ def main():
     app.add_handler(CallbackQueryHandler(my_essays, pattern="^my_essays$"))
     app.add_handler(CallbackQueryHandler(my_joined_essays, pattern="^my_joined_essays$"))
     app.add_handler(CallbackQueryHandler(browse_essays, pattern="^browse_essays$"))
+    app.add_handler(CallbackQueryHandler(choose_anonymity, pattern="^anon_"))
     app.add_handler(CallbackQueryHandler(join_essay_callback, pattern="^join_essay_"))
     app.add_handler(CallbackQueryHandler(choose_join_anonymity, pattern="^join_anon_"))
     app.add_handler(CallbackQueryHandler(continue_writing, pattern="^continue_"))
