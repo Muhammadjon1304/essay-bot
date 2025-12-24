@@ -5,6 +5,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 from datetime import datetime
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 def generate_essay_pdf(essay):
     """Generate a PDF file for the essay"""
@@ -83,16 +86,26 @@ def generate_essay_pdf(essay):
         story.append(Paragraph(second_content, content_style))
         story.append(Spacer(1, 0.2*inch))
     
+    
     story.append(Spacer(1, 0.3*inch))
     
-    creator_name = essay.get('creator_name', 'Unknown')
+    # Creator name - hide if essay was created anonymously
+    creator_name = "Anonymous" if essay.get('is_anonymous') else essay.get('creator_name', 'Unknown')
     story.append(Paragraph(f"<b>Contributors:</b>", author_style))
     story.append(Paragraph(f"1. {creator_name} (Opening)", author_style))
     
     # Add all partners
     if essay.get('partners'):
         for i, partner in enumerate(essay['partners'], start=2):
-            story.append(Paragraph(f"{i}. {partner['name']} (Continuation)", author_style))
+            # Hide partner name if they joined anonymously
+            # Check for is_anonymous as boolean, integer, or string
+            is_anon = partner.get('is_anonymous')
+            logger.info(f"📋 Partner {i}: name={partner.get('name')}, is_anonymous={is_anon} (type: {type(is_anon)})")
+            if is_anon in (True, 1, '1', 'true', 'True', 'TRUE'):
+                partner_name = "Anonymous"
+            else:
+                partner_name = partner.get('name', 'Unknown')
+            story.append(Paragraph(f"{i}. {partner_name} (Continuation)", author_style))
     else:
         # Fallback for old format essays
         if essay.get('partner_name'):
@@ -101,3 +114,4 @@ def generate_essay_pdf(essay):
     doc.build(story)
     
     return filename
+
