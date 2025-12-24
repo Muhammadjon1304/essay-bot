@@ -623,8 +623,10 @@ async def confirm_write(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if essay['creator_id'] == user_id:
         # Current user is creator, next writer is partner
         if essay.get('partners') and len(essay['partners']) > 0:
-            next_writer_id = essay['partners'][0]['id']
-            next_writer_name = essay['partners'][0]['name']
+            partner = essay['partners'][0]
+            next_writer_id = partner['id']
+            # Hide name if partner is anonymous
+            next_writer_name = "Someone" if partner.get('is_anonymous') else partner['name']
         else:
             logger.error(f"❌ No partners found for essay {essay_id}")
             next_writer_id = None
@@ -632,7 +634,8 @@ async def confirm_write(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         # Current user is partner, next writer is creator
         next_writer_id = essay['creator_id']
-        next_writer_name = essay['creator_name']
+        # Hide creator name if essay was created anonymously
+        next_writer_name = "Someone" if essay.get('is_anonymous') else essay['creator_name']
     
     logger.info(f"🔔 Next writer: {next_writer_name} (ID: {next_writer_id})")
     
@@ -722,6 +725,33 @@ async def finish_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "✅ Both partners accepted. Generating PDF..."
         )
         
+        # Send PDF to archive chat
+        ARCHIVE_CHAT_ID = 2362694708
+        if pdf_file and os.path.exists(pdf_file):
+            try:
+                with open(pdf_file, 'rb') as f:
+                    # Create caption with all original names
+                    creator_name = essay.get('creator_name', 'Unknown')
+                    partners_info = []
+                    if essay.get('partners'):
+                        for partner in essay['partners']:
+                            partners_info.append(partner.get('name', 'Unknown'))
+                    
+                    caption = f"📄 {essay['topic']}\n\n"
+                    caption += f"By: {creator_name}"
+                    if partners_info:
+                        caption += f" & {', '.join(partners_info)}"
+                    
+                    await context.bot.send_document(
+                        chat_id=ARCHIVE_CHAT_ID,
+                        document=f,
+                        filename=f"{essay['topic'].replace(' ', '_')}.pdf",
+                        caption=caption
+                    )
+                    logger.info(f"✅ PDF sent to archive chat {ARCHIVE_CHAT_ID}")
+            except Exception as e:
+                logger.error(f"❌ Error sending PDF to archive chat: {e}")
+        
         # Send PDF to current user
         if pdf_file and os.path.exists(pdf_file):
             try:
@@ -761,11 +791,14 @@ async def finish_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         # Get other partner
         if user_id == essay['creator_id']:
-            other_user_id = essay['partners'][0]['id']
-            other_username = essay['partners'][0]['name']
+            partner = essay['partners'][0]
+            other_user_id = partner['id']
+            # Hide name if partner is anonymous
+            other_username = "Someone" if partner.get('is_anonymous') else partner['name']
         else:
             other_user_id = essay['creator_id']
-            other_username = essay['creator_name']
+            # Hide creator name if essay was created anonymously
+            other_username = "Someone" if essay.get('is_anonymous') else essay['creator_name']
         
         await query.edit_message_text(
             f"🏁 Finish Request Sent!\n\n"
@@ -831,6 +864,33 @@ async def accept_finish(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📝 Topic: {essay['topic']}\n\n"
             "✅ Both partners accepted. Generating PDF..."
         )
+        
+        # Send PDF to archive chat
+        ARCHIVE_CHAT_ID = 2362694708
+        if pdf_file and os.path.exists(pdf_file):
+            try:
+                with open(pdf_file, 'rb') as f:
+                    # Create caption with all original names
+                    creator_name = essay.get('creator_name', 'Unknown')
+                    partners_info = []
+                    if essay.get('partners'):
+                        for partner in essay['partners']:
+                            partners_info.append(partner.get('name', 'Unknown'))
+                    
+                    caption = f"📄 {essay['topic']}\n\n"
+                    caption += f"By: {creator_name}"
+                    if partners_info:
+                        caption += f" & {', '.join(partners_info)}"
+                    
+                    await context.bot.send_document(
+                        chat_id=ARCHIVE_CHAT_ID,
+                        document=f,
+                        filename=f"{essay['topic'].replace(' ', '_')}.pdf",
+                        caption=caption
+                    )
+                    logger.info(f"✅ PDF sent to archive chat {ARCHIVE_CHAT_ID}")
+            except Exception as e:
+                logger.error(f"❌ Error sending PDF to archive chat: {e}")
         
         # Send PDF to current user (who accepted)
         if pdf_file and os.path.exists(pdf_file):
