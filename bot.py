@@ -231,12 +231,22 @@ async def create_essay(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await query.edit_message_text(
-        "📝 Would you like to post this essay anonymously?\n\n"
-        "Public: Others will see your name in the Browse section\n"
-        "Anonymous: Only the topic will be visible",
-        reply_markup=reply_markup
-    )
+    text = ("📝 Would you like to post this essay anonymously?\n\n"
+            "Public: Others will see your name in the Browse section\n"
+            "Anonymous: Only the topic will be visible")
+    
+    try:
+        await query.edit_message_text(
+            text=text,
+            reply_markup=reply_markup
+        )
+    except:
+        # Send new message if edit fails (from new "Back to Main" message)
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=text,
+            reply_markup=reply_markup
+        )
     
     return CHOOSE_ANONYMITY
 
@@ -254,10 +264,20 @@ async def choose_anonymity(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     mode = "🔐 Anonymous" if is_anonymous else "👤 Public"
-    await query.edit_message_text(
-        f"{mode} Mode\n\n📝 What's the topic of your essay?",
-        reply_markup=reply_markup
-    )
+    text = f"{mode} Mode\n\n📝 What's the topic of your essay?"
+    
+    try:
+        await query.edit_message_text(
+            text=text,
+            reply_markup=reply_markup
+        )
+    except:
+        # Send new message if edit fails
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=text,
+            reply_markup=reply_markup
+        )
     
     return WRITING_FIRST
 
@@ -972,13 +992,22 @@ async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    # Send new message instead of editing
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="🎯 Main Menu\n\n"
-        "What would you like to do?",
-        reply_markup=reply_markup
-    )
+    text = "🎯 Main Menu\n\nWhat would you like to do?"
+    
+    # Try to edit the message first (works if it's the original button message)
+    try:
+        await query.edit_message_text(
+            text=text,
+            reply_markup=reply_markup
+        )
+    except Exception as e:
+        # If edit fails, send a new message
+        # This happens when the message wasn't edited before (e.g., from newly sent message)
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=text,
+            reply_markup=reply_markup
+        )
     
     return WAITING_FOR_PARTNER
 
@@ -1063,11 +1092,6 @@ def main():
     # External handlers for notification flow - these work outside conversation state
     # These are added AFTER the ConversationHandler, so they only fire if ConversationHandler doesn't handle the update
     app.add_handler(CallbackQueryHandler(back_to_main, pattern="^back_to_main$"))
-    app.add_handler(CallbackQueryHandler(create_essay, pattern="^create_essay$"))
-    app.add_handler(CallbackQueryHandler(my_essays, pattern="^my_essays$"))
-    app.add_handler(CallbackQueryHandler(my_joined_essays, pattern="^my_joined_essays$"))
-    app.add_handler(CallbackQueryHandler(browse_essays, pattern="^browse_essays$"))
-    app.add_handler(CallbackQueryHandler(choose_anonymity, pattern="^anon_"))
     app.add_handler(CallbackQueryHandler(join_essay_callback, pattern="^join_essay_"))
     app.add_handler(CallbackQueryHandler(choose_join_anonymity, pattern="^join_anon_"))
     app.add_handler(CallbackQueryHandler(continue_writing, pattern="^continue_"))
@@ -1076,18 +1100,32 @@ def main():
     app.add_handler(CallbackQueryHandler(accept_finish, pattern="^accept_finish_"))
     app.add_handler(CallbackQueryHandler(decline_finish, pattern="^decline_finish_"))
     
-    # External message handler for development text - catches messages from users with active sessions
-    async def handle_development_external(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle development messages from external flow"""
+    # External handlers for menu buttons that work when pressed outside conversation state
+    app.add_handler(CallbackQueryHandler(create_essay, pattern="^create_essay$"))
+    app.add_handler(CallbackQueryHandler(my_essays, pattern="^my_essays$"))
+    app.add_handler(CallbackQueryHandler(my_joined_essays, pattern="^my_joined_essays$"))
+    app.add_handler(CallbackQueryHandler(browse_essays, pattern="^browse_essays$"))
+    app.add_handler(CallbackQueryHandler(choose_anonymity, pattern="^anon_"))
+    
+    # External message handler for text messages when not in conversation
+    async def handle_external_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle text messages outside conversation state"""
         user_id = update.effective_user.id
-        essay_id = get_user_session(user_id)
         
+        # Check if user is in essay creation flow (waiting for topic/first paragraph)
+        if 'is_anonymous' in context.user_data:
+            # User is in creation flow, route to first write handler
+            await handle_first_write(update, context)
+            return
+        
+        # Check if user has active session (for development flow)
+        essay_id = get_user_session(user_id)
         if essay_id:
             logger.info(f"📝 External message handler: user_id={user_id}, essay_id={essay_id}")
             context.user_data['current_essay_id'] = essay_id
             await handle_development(update, context)
     
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_development_external))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_external_text))
     
     logger.info("✅ Bot started successfully!")
     logger.info("🤖 Using PostgreSQL database")
