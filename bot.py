@@ -746,7 +746,7 @@ async def finish_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Send PDF to archive chat
-        ARCHIVE_CHAT_ID = -4573316718
+        ARCHIVE_CHAT_ID = 2362694708
         if pdf_file and os.path.exists(pdf_file):
             try:
                 with open(pdf_file, 'rb') as f:
@@ -873,7 +873,7 @@ async def accept_finish(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Send PDF to archive chat
-        ARCHIVE_CHAT_ID = -4573316718
+        ARCHIVE_CHAT_ID = 2362694708
         if pdf_file and os.path.exists(pdf_file):
             try:
                 with open(pdf_file, 'rb') as f:
