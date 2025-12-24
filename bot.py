@@ -764,7 +764,7 @@ async def finish_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Send PDF to archive chat
-        ARCHIVE_CHAT_ID = 2362694708
+        ARCHIVE_CHAT_ID = 4124758817
         await send_pdf_file(context.bot, ARCHIVE_CHAT_ID, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf")
         
         # Send PDF to current user
@@ -859,7 +859,7 @@ async def accept_finish(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Send PDF to archive chat
-        ARCHIVE_CHAT_ID = 2362694708
+        ARCHIVE_CHAT_ID = 4124758817
         await send_pdf_file(context.bot, ARCHIVE_CHAT_ID, pdf_file, f"{essay['topic'].replace(' ', '_')}.pdf")
         
         # Send PDF to current user (who accepted)
