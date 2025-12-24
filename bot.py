@@ -186,7 +186,19 @@ async def choose_join_anonymity(update: Update, context: ContextTypes.DEFAULT_TY
         f"📝 Topic: {essay['topic']}\n"
         f"   {creator_info}\n"
         f"Opening: {essay['first_content']}\n\n"
-        "👉 Wait for your partner to continue writing or check your joined essays to start!"
+        "Now write your contribution (less than 50 words)!"
+    )
+    
+    # Show partner the essay and ask them to write
+    await context.bot.send_message(
+        chat_id=user_id,
+        text=f"📝 Current Essay ({len(essay['first_content'].split())} words):\n\n"
+        f"{essay['first_content']}\n\n"
+        "---\n\n"
+        "Ready to write your contribution (less than 50 words)?",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("⬅️ Back to Main", callback_data="back_to_main")],
+        ])
     )
     
     # Notify creator
@@ -195,14 +207,17 @@ async def choose_join_anonymity(update: Update, context: ContextTypes.DEFAULT_TY
         chat_id=essay['creator_id'],
         text=f"🔔 PARTNER JOINED!\n\n"
         f"📝 {partner_display} joined your essay: {essay['topic']}\n\n"
-        f"Now write your next part (less than 50 words)!",
+        f"Waiting for {partner_display} to write their part...",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("✍️ Continue Writing", callback_data=f"continue_{essay_id}")],
+            [InlineKeyboardButton("⬅️ Back to Main", callback_data="back_to_main")],
         ])
     )
     
+    # Store partner's user_id for the next turn
+    set_user_session(user_id, essay_id)
+    
     context.user_data.pop('joining_essay_id', None)
-    return WAITING_FOR_PARTNER
+    return WRITING_DEVELOPMENT
 
 async def create_essay(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start essay creation process - ask about anonymity"""
@@ -336,7 +351,19 @@ async def join_essay(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"✅ Successfully joined!\n\n"
         f"📝 Topic: {essay['topic']}\n"
         f"Opening: {essay['first_content']}\n\n"
-        "👉 Wait for your partner to continue writing!"
+        "👉 Now write your contribution (less than 50 words)!"
+    )
+    
+    # Show partner the essay and ask them to write
+    await context.bot.send_message(
+        chat_id=user_id,
+        text=f"📝 Current Essay ({len(essay['first_content'].split())} words):\n\n"
+        f"{essay['first_content']}\n\n"
+        "---\n\n"
+        "Ready to write your contribution (less than 50 words)?",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("⬅️ Back to Main", callback_data="back_to_main")],
+        ])
     )
     
     # Notify creator
@@ -344,13 +371,16 @@ async def join_essay(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=essay['creator_id'],
         text=f"🔔 PARTNER JOINED!\n\n"
         f"📝 {username} joined your essay: {essay['topic']}\n\n"
-        f"Now write your next part (less than 50 words)!",
+        f"Waiting for {username} to write their part...",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("✍️ Continue Writing", callback_data=f"continue_{essay_id}")],
+            [InlineKeyboardButton("⬅️ Back to Main", callback_data="back_to_main")],
         ])
     )
     
-    return WAITING_FOR_PARTNER
+    # Store partner's user_id for the next turn
+    set_user_session(user_id, essay_id)
+    
+    return WRITING_DEVELOPMENT
 
 async def my_essays(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show user's created essays"""
